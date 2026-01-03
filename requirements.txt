@@ -1,0 +1,30 @@
+# Core dependencies
+# MicroFacial Expression Recognition - CASME-II Research Implementation
+# Requirements for the optimized hybrid model with CASME-II-safe LOSO
+
+# Core Deep Learning
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# Data Processing
+pandas>=1.5.0
+numpy>=1.21.0
+scikit-learn>=1.1.0
+opencv-python>=4.6.0
+Pillow>=9.0.0
+
+# Visualization & Analysis
+scikit-learn>=1.0.0
+
+# Visualization and logging
+matplotlib>=3.5.0
+seaborn>=0.11.0
+tensorboard>=2.8.0
+
+# Data handling
+pathlib2>=2.3.0
+
+# Optional: For enhanced performance
+# accelerate>=0.20.0  # For distributed training
+# wandb>=0.12.0     # For experiment tracking

@@ -1,0 +1,10 @@
+data/
+data*/
+output/
+checkpoints/
+__pycache__/
+*__pycache__/
+.venv*/
+optical_flow_test.jpg
+.DS_Store
+Thumbs.db
