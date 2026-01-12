@@ -1,0 +1,6 @@
+metric,value
+mean_test_uar,36.701388888888886
+std_test_uar,33.83422964702482
+mean_val_uar,62.840470679012334
+best_test_uar,100.0
+worst_test_uar,0.0

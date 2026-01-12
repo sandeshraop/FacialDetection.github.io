@@ -1,0 +1,8 @@
+subject_id,best_val_uar,test_uar,train_samples,test_samples
+sub01,0.0,100.0,7,1
+sub04,0.0,100.0,6,2
+sub11,0.0,100.0,7,1
+sub14,0.0,0.0,7,1
+sub17,0.0,0.0,7,1
+sub19,0.0,0.0,7,1
+sub23,0.0,0.0,7,1
