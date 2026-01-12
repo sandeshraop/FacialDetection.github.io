@@ -1,10 +1,21 @@
+# Exclude data directories from Git
 data/
 data*/
+
+# Exclude output and checkpoints
 output/
 checkpoints/
+
+# Exclude Python cache
 __pycache__/
 *__pycache__/
+
+# Exclude virtual environment
 .venv*/
+
+# Exclude optical flow test image
 optical_flow_test.jpg
+
+# Exclude OS files
 .DS_Store
 Thumbs.db

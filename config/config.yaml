@@ -3,25 +3,37 @@ model:
   input_size: 224
   pretrained: true
   backbone: resnet18
-  dropout: 0.3
-  num_frames: 1
-  sequence_strategy: apex_only
+  dropout: 0.2
+  num_frames: 3
+  sequence_strategy: onset_apex_offset
+
+augmentation:
+  horizontal_flip: true
+  color_jitter: true
+  brightness_range: 0.15
+  contrast_range: 0.15
+  saturation_range: 0.1
+  hue_range: 0.05
+  rotation_range: 0
+  affine_scale: 0
+  gaussian_blur: false
+  gaussian_noise: false
 
 data:
   data_dir: data
   data_source: cropped
-  batch_size: 8
-  num_workers: 4
+  batch_size: 32
+  num_workers: 8
   random_seed: 42
 
 training:
-  num_epochs: 80
+  num_epochs: 60
   lr: 0.0001
   weight_decay: 0.0001
-  early_stop: 25
+  early_stop: 20
   mixed_precision: true
   gradient_clip: 1.0
-  warmup_epochs: 5
+  warmup_epochs: 3
 
 scheduler:
   type: cosine

@@ -109,7 +109,7 @@ def train_single_subject_fold_optical_flow(subject_id, config, device):
     scaler = torch.amp.GradScaler('cuda') if device.type == 'cuda' else None
     
     # Training loop
-    best_val_acc = 0.0
+    best_val_uar = 0.0
     patience_counter = 0
     max_patience = config['training']['early_stop']
     
@@ -186,13 +186,18 @@ def train_single_subject_fold_optical_flow(subject_id, config, device):
                 val_y_pred.extend(predicted.cpu().numpy())
         
         # Calculate UAR instead of accuracy
+        # ✅ MINIMUM VALIDATION SAMPLES CHECK (Critical for LOSO stability)
+        if len(val_y_true) < 6:
+            print("⚠️ Skipping early stop update (val set too small)")
+            continue  # Skip this epoch for early stopping
+            
         val_uar = calculate_uar(val_y_true, val_y_pred)
         train_acc = 100 * train_correct / max(train_total, 1)  # Keep for training monitoring only
         
-        scheduler.step()
+        scheduler.step(epoch)
         
-        if val_uar > best_val_acc:
-            best_val_acc = val_uar
+        if val_uar > best_val_uar:
+            best_val_uar = val_uar
             patience_counter = 0
             # Save best model
             torch.save({
@@ -200,13 +205,13 @@ def train_single_subject_fold_optical_flow(subject_id, config, device):
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'scheduler_state_dict': scheduler.state_dict(),
-                'best_val_acc': best_val_acc,
+                'best_val_uar': best_val_uar,
                 'subject_id': subject_id
             }, f'checkpoints/hybrid_subject_{subject_id}_best.pth')
         else:
             patience_counter += 1
         
-        print(f'Subject {subject_id} Epoch {epoch+1}: Train Acc: {train_acc:.2f}%, Val UAR: {val_uar:.2f}% (Best: {best_val_acc:.2f}%)')
+        print(f'Subject {subject_id} Epoch {epoch+1}: Train Acc: {train_acc:.2f}%, Val UAR: {val_uar:.2f}% (Best: {best_val_uar:.2f}%)')
         
         if patience_counter >= max_patience:
             print(f'Early stopping triggered after {epoch+1} epochs')
@@ -235,13 +240,13 @@ def train_single_subject_fold_optical_flow(subject_id, config, device):
     test_uar = calculate_uar(test_y_true, test_y_pred)
     
     print(f'✅ Subject {subject_id} Optical Flow Results:')
-    print(f'   Best Val UAR: {best_val_acc:.2f}%')
+    print(f'   Best Val UAR: {best_val_uar:.2f}%')
     print(f'   Test UAR: {test_uar:.2f}%')
     print(f'🔥 Motion-based recognition with optical flow!')
     
     return {
         'subject_id': subject_id,
-        'best_val_uar': best_val_acc,
+        'best_val_uar': best_val_uar,
         'test_uar': test_uar,
         'train_samples': len(train_loader.dataset),
         'test_samples': len(test_loader.dataset)
@@ -255,7 +260,7 @@ def optical_flow_losos_demo(config, device):
     # Test on subjects with sufficient data (>=10 samples based on analysis)
     # Good candidates: sub02(13), sub05(19), sub09(14), sub10(14), sub11(10), sub12(12), 
     # sub17(36), sub19(16), sub20(11), sub23(12), sub24(10), sub26(17)
-    test_subjects = [5, 9, 12, 17, 19, 26]  # Selected diverse subjects with good data
+    test_subjects = list(range(1, 27))  # 🚀 FULL LOSO: All 26 subjects
     results = []
     
     for subject_id in test_subjects:
@@ -291,6 +296,27 @@ def optical_flow_losos_demo(config, device):
         improvement = mean_test_uar - rgb_baseline
         print(f'\n🎯 Optical Flow Performance Improvement: +{improvement:.2f}% absolute')
         print(f'📈 Expected UAR boost: +8-15% over RGB baseline')
+        
+        # ✅ SAVE RESULTS TO CSV (Critical for research)
+        import pandas as pd
+        from pathlib import Path
+        
+        # Create results directory
+        Path("results").mkdir(exist_ok=True)
+        
+        # Save detailed results
+        df = pd.DataFrame(results)
+        df.to_csv("results/loso_optical_flow_results.csv", index=False)
+        print(f"\n📁 Results saved to results/loso_optical_flow_results.csv")
+        
+        # Save summary statistics
+        summary_data = {
+            'metric': ['mean_test_uar', 'std_test_uar', 'mean_val_uar', 'best_test_uar', 'worst_test_uar', 'improvement_vs_rgb'],
+            'value': [mean_test_uar, std_test_uar, mean_val_uar, np.max(test_uars), np.min(test_uars), improvement]
+        }
+        summary_df = pd.DataFrame(summary_data)
+        summary_df.to_csv("results/loso_optical_flow_summary.csv", index=False)
+        print(f"📁 Summary saved to results/loso_optical_flow_summary.csv")
         
         if mean_test_uar >= 45:
             print('🏆 CONSERVATIVE TARGET ACHIEVED!')
